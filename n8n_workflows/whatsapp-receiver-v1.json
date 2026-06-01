@@ -1,0 +1,366 @@
+{
+  "name": "whatsapp_receiver_v1",
+  "nodes": [
+    {
+      "parameters": {
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.phone }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name}}"
+            },
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "is_qualified",
+              "fieldValue": "=true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        432,
+        400
+      ],
+      "id": "3fb53c14-e4da-4699-b553-8539df2a812d",
+      "name": "Create a row in Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "vY4WspF4E8Le4oAb",
+          "name": "Supabase account Dankai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $json.phone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        608,
+        400
+      ],
+      "id": "42fb8818-de36-4ae9-9514-0f352d5824be",
+      "name": "Get a row in Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "vY4WspF4E8Le4oAb",
+          "name": "Supabase account Dankai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "condition": "eq",
+              "keyValue": "={{ $json.phone }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "visit_count",
+              "fieldValue": "={{ $json.visit_count + 1 }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        736,
+        400
+      ],
+      "id": "75476067-417f-4722-902a-4e162c80d6f7",
+      "name": "Update a row in Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "vY4WspF4E8Le4oAb",
+          "name": "Supabase account Dankai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "361c7aa9-ccc4-4d9b-b4cc-c46a89a6de81",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        96,
+        32
+      ],
+      "id": "ffd71cea-c808-4721-a923-5eab0a0c1699",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle both raw body wrapper and direct JSON modes\nconst raw = $input.first().json;\nconst body = raw.body ?? raw;\n\n// Handle Meta verification GET requests\nif (!body || !body.entry) {\n  return [{ json: { skip: true } }];\n}\n\nconst entry = body.entry[0];\n\n// entry[0] might be an array in some test payloads — unwrap it\nconst entryObj = Array.isArray(entry) ? entry[0] : entry;\nconst change = entryObj.changes[0].value;\n\n// Only process actual messages\nif (!change.messages) {\n  return [{ json: { skip: true } }];\n}\n\nconst phone = change.contacts?.[0]?.wa_id \n           || change.messages?.[0]?.from \n           || '';\nconst name  = change.contacts?.[0]?.profile?.name || 'Cliente';\nconst message = change.messages[0].text?.body || '';\n\n// Safety check — if phone is empty, skip to avoid bad API call\nif (!phone) {\n  return [{ json: { skip: true, reason: 'no phone extracted' } }];\n}\n\nreturn [{ json: { phone, name, message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        16
+      ],
+      "id": "02d9ae66-de27-472b-ae38-cfdfb66717ee",
+      "name": "Parse WhatsApp Payload"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Cliente: {{ $json.name }}\nTeléfono: {{ $json.phone }}\nMensaje: {{ $json.message }}\n\n¿Es este un lead calificado? ¿Cliente nuevo o existente?",
+        "options": {
+          "systemMessage": "=Eres un agente de calificación de leads para una herrería en República Dominicana.\n\nTu trabajo:\n1. Leer el mensaje del cliente\n2. Decidir si es un lead calificado (pregunta sobre rejas, puertas, balcones, portones, trabajos en hierro)\n3. Si el cliente ya existe en la base de datos, actualizar su registro\n4. Si es nuevo, crear un nuevo registro\n\nSiempre responde en español.\n\nUsa estas herramientas:\n- \"Get a row in Supabase\" para buscar si el cliente ya existe (buscar por phone)\n- \"Create a row in Supabase\" si es nuevo cliente\n- \"Update a row in Supabase\" si es cliente existente\n\nResponde con JSON:\n{\n  \"is_qualified\": true/false,\n  \"action\": \"create\" | \"update\" | \"none\",\n  \"customer_phone\": \"número\",\n  \"customer_name\": \"nombre\",\n  \"reason\": \"explicación breve\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        16
+      ],
+      "id": "78bc645d-ac7d-402d-9a4b-b9da52e473a9",
+      "name": "Agent Assistant"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1165360713323545/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('Parse WhatsApp Payload').item.json.phone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"¡Hola! Claro que sí, con gusto le ayudamos con eso. Para darle una cotización exacta, ¿podría enviarme las medidas aproximadas o fotos del área donde necesita el trabajo? Así le pasamos un presupuesto de una vez.\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1136,
+        -16
+      ],
+      "id": "da26ade7-56a3-4cf5-861f-4cd40cd69210",
+      "name": "Send WhatsApp Reply",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "GxalgXWeMGrKUTT9",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-receiver",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        16
+      ],
+      "id": "ace376d5-8b2f-478a-8deb-54f7f46ab982",
+      "name": "WhatsApp Receiver",
+      "webhookId": "1faffa1a-2f86-4f02-94d3-ba128582f2d5"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-v4-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        112,
+        304
+      ],
+      "id": "9703007a-2f85-4db8-b8a9-bd6ac6323c30",
+      "name": "Deepseek LLM v4-Pro",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ffPzRZs9x8chVhr5",
+          "name": "OpenRouter account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create a row in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Agent Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse WhatsApp Payload": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Assistant": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp Reply": {
+      "main": [
+        []
+      ]
+    },
+    "WhatsApp Receiver": {
+      "main": [
+        [
+          {
+            "node": "Parse WhatsApp Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Deepseek LLM v4-Pro": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "7qJXZadYruaZnVPs",
+    "timezone": "America/Santo_Domingo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "d394eaf4-10e3-412e-a450-caa07c46919c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fd32bfc9e9133a22b9d5a74492cc18992597f6bcd8215d6826b30632e8b088c7"
+  },
+  "id": "KjH9Lp0ExOH7tsuy",
+  "tags": []
+}

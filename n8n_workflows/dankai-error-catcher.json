@@ -1,0 +1,134 @@
+{
+  "name": "DanKai — Error Catcher",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "607e9155-e939-456f-b4ee-0001029b5298",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1165360713323545/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.adminPhone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": {{ JSON.stringify(\"DanKai Error\\nWorkflow: \" + $json.workflow + \"\\nError: \" + $json.error_Message + \"\\nExecution ID: \" + $json.execution_ID + \"\\nLast Node: \" + $json.last_execution) }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        272,
+        0
+      ],
+      "id": "1a8ebc2d-bd81-49e0-8e94-001f60923f8f",
+      "name": "Send WhatsApp Error Alert",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "GxalgXWeMGrKUTT9",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f523fb95-a666-493e-8459-364be5b088ae",
+              "name": "adminPhone",
+              "value": 18292657792,
+              "type": "number"
+            },
+            {
+              "id": "a79fb97e-4689-4978-9abf-08441c5a1c52",
+              "name": "workflow",
+              "value": "={{ $json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "e5f6ae1f-69d6-4376-83e2-9e5e1c965c86",
+              "name": "last_execution",
+              "value": "={{ $json.execution.lastNodeExecuted }}",
+              "type": "string"
+            },
+            {
+              "id": "61ab63ca-49b2-4b47-835f-17c60f828af2",
+              "name": "execution_ID",
+              "value": "={{ $json.execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "6fad539b-6c06-46d1-89e6-6aadc08bd814",
+              "name": "error_Message",
+              "value": "={{ $json.execution.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        0
+      ],
+      "id": "b65786bc-de90-45be-85d3-f74b6658e22d",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c80cf8ed-f46e-4d2c-aff9-bbbeaa445beb",
+  "meta": {
+    "instanceId": "fd32bfc9e9133a22b9d5a74492cc18992597f6bcd8215d6826b30632e8b088c7"
+  },
+  "id": "7qJXZadYruaZnVPs",
+  "tags": []
+}
