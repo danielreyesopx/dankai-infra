@@ -75,3 +75,31 @@ return [{ json: { formatted_date: formatted } }];
 
 **The line I'd change:** Line 3 — update `'es-DO'` for a different language,
 or `created_at` in Line 1 if the date field has a different name.
+
+---
+
+## Snippet 004 — Build a WhatsApp Message String
+
+**Used in:** any workflow that needs to send a dynamic, personalized message
+**What it does:** Takes a lead's name and message from incoming data and
+builds a formatted WhatsApp reply string using a template.
+
+**Key patterns learned:**
+- `.map()` — loops over all incoming items and transforms each one
+- Backtick strings with `${}` — template literals, inject variables into text
+- `|| 'default'` — fallback if field is missing
+
+```javascript
+const items = $input.all();
+const results = items.map(item => {
+  const name = item.json.name || 'Cliente';
+  const message = item.json.message || '';
+  const reply = `Hola ${name}, recibimos tu mensaje: "${message}". En breve te respondemos.`;
+  return { json: { reply } };
+});
+return results;
+```
+
+**The line I'd change:** Line 5 — rewrite the template text to match
+whatever message DanKai needs to send.
+
