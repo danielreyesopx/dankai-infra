@@ -179,3 +179,30 @@ return [{
 
 **The line I'd change:** Add or remove fields to match whatever shape
 the target API expects.
+
+---
+
+## Snippet 008 — Build a Summary String
+
+**Used in:** workflows that generate reports, alerts, or multi-field
+WhatsApp messages from lead or conversation data.
+**What it does:** Combines multiple fields into one clean, readable
+multi-line string.
+
+**Key patterns learned:**
+- Multi-line template literals — backticks let you span multiple lines
+- `.trim()` — removes blank lines/spaces from start and end of string
+
+```javascript
+const item = $input.first().json;
+const summary = `
+Lead: ${item.name} (${item.phone})
+Message: ${item.message}
+Status: ${item.lead_status ?? 'new'}
+Received: ${item.created_at}
+`.trim();
+return [{ json: { summary } }];
+```
+
+**The line I'd change:** Add or remove fields inside the template to
+match whatever summary format you need.
