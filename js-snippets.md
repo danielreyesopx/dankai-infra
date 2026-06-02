@@ -45,3 +45,33 @@ return [{ json: { phone: clean_phone } }];
 
 **The line I'd change:** Line 1 — update `json.phone` to match whatever
 field name the incoming data uses.
+
+-------------------------------
+
+---
+
+## Snippet 003 — Format a Date
+
+**Used in:** any workflow that reads timestamps from Supabase and needs
+to display them in a human-readable format (reports, WhatsApp messages).
+**What it does:** Converts a raw ISO timestamp like `2026-06-02T14:32:00.000Z`
+into a clean readable date like `02 de junio de 2026`.
+
+**Key patterns learned:**
+- `new Date(raw)` — converts a string into a JavaScript Date object
+- `.toLocaleDateString('es-DO', {...})` — formats for Dominican Spanish
+- Change `'es-DO'` to `'en-US'` to switch to English output
+
+```javascript
+const raw_date = $input.first().json.created_at;
+const date = new Date(raw_date);
+const formatted = date.toLocaleDateString('es-DO', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric'
+});
+return [{ json: { formatted_date: formatted } }];
+```
+
+**The line I'd change:** Line 3 — update `'es-DO'` for a different language,
+or `created_at` in Line 1 if the date field has a different name.
