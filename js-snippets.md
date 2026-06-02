@@ -103,3 +103,24 @@ return results;
 **The line I'd change:** Line 5 — rewrite the template text to match
 whatever message DanKai needs to send.
 
+---
+
+## Snippet 005 — Filter an Array
+
+**Used in:** any workflow that gets multiple rows from Supabase and needs
+only the ones matching a condition (e.g. only hot leads, only active clients).
+**What it does:** Filters incoming items and returns only those where
+a field matches a specific value.
+
+**Key patterns learned:**
+- `.filter()` — keeps only items where the condition is true
+- `===` — strict equality ("exactly equals", not just similar)
+
+```javascript
+const items = $input.all();
+const hot_leads = items.filter(item => item.json.status === 'hot');
+return hot_leads.map(item => ({ json: item.json }));
+```
+
+**The line I'd change:** Line 2 — update `status` to the field you're
+filtering on, and `'hot'` to the value you're looking for.
