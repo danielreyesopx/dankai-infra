@@ -148,3 +148,34 @@ return [{ json: { phone } }];
 
 **The line I'd change:** Line 3 — update field names to match whatever
 the incoming webhook actually sends.
+
+
+---
+
+## Snippet 007 — Reshape JSON for an API
+
+**Used in:** any workflow that needs to repackage internal data into the
+specific shape an external API or tool expects.
+**What it does:** Picks specific fields from incoming data, renames them,
+and adds hardcoded values where needed.
+
+**Key patterns learned:**
+- Field renaming: `contact_name: item.name` — new name on left, source on right
+- Hardcoded values: `source: 'whatsapp'` — fixed value, not from data
+- `??` fallback: `item.lead_status ?? 'new'` — default if field is missing
+
+```javascript
+const item = $input.first().json;
+return [{
+  json: {
+    contact_name: item.name,
+    contact_phone: item.phone,
+    source: 'whatsapp',
+    created: item.created_at,
+    status: item.lead_status ?? 'new'
+  }
+}];
+```
+
+**The line I'd change:** Add or remove fields to match whatever shape
+the target API expects.
