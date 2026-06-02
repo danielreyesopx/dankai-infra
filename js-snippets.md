@@ -206,3 +206,28 @@ return [{ json: { summary } }];
 
 **The line I'd change:** Add or remove fields inside the template to
 match whatever summary format you need.
+
+---
+
+## Snippet 009 — Check if a Lead Already Exists
+
+**Used in:** whatsapp_receiver_v1 — before creating a new lead, check
+if this phone number already has a Supabase record.
+**What it does:** Takes the Supabase query result and returns a boolean
+flag (true/false) that the If node can route on.
+
+**Key patterns learned:**
+- `items.length > 0` — checks if any rows were returned
+- `!= null` — checks that a field has a real value
+- `&&` — both conditions must be true for the result to be true
+- Output is `true` or `false` — clean for If node routing
+
+```javascript
+const items = $input.all();
+const exists = items.length > 0 && items[0].json.id != null;
+return [{ json: { lead_exists: exists } }];
+```
+
+**The line I'd change:** `items[0].json.id` — update `id` to whichever
+field confirms a real record exists in your table.
+
