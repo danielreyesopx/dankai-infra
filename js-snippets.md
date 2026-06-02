@@ -231,3 +231,38 @@ return [{ json: { lead_exists: exists } }];
 **The line I'd change:** `items[0].json.id` — update `id` to whichever
 field confirms a real record exists in your table.
 
+
+---
+
+## Snippet 010 — Idempotency Check
+
+**Used in:** whatsapp_receiver_v1 — prevents duplicate replies when
+Meta sends the same webhook more than once.
+**What it does:** Checks if a message ID has already been processed.
+If yes, returns skip:true so the If node exits early.
+
+**Key patterns learned:**
+- Idempotency: process each unique event exactly once
+- message_id as the unique key — store it after processing
+- Multiple early exit points — return skip:true to stop the workflow
+- `??` fallback for boolean fields
+
+```javascript
+const item = $input.first().json;
+const message_id = item.message_id || item.id || '';
+if (!message_id) {
+  return [{ json: { skip: true, reason: 'no message_id' } }];
+}
+const already_processed = item.processed ?? false;
+if (already_processed) {
+  return [{ json: { skip: true, reason: 'duplicate message' } }];
+}
+return [{ json: { message_id, skip: false } }];
+```
+
+**The line I'd change:** `item.processed` — update to match whatever
+field name you use in Supabase to track processed messages.
+
+**Why it matters for DanKai:** Meta sends duplicate webhooks when your
+server is slow. Without this check, the customer receives two identical
+WhatsApp replies — looks broken and unprofessional.
