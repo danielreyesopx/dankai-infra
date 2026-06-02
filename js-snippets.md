@@ -124,3 +124,27 @@ return hot_leads.map(item => ({ json: item.json }));
 
 **The line I'd change:** Line 2 — update `status` to the field you're
 filtering on, and `'hot'` to the value you're looking for.
+
+---
+
+## Snippet 006 — Parse a Webhook Payload Safely
+
+**Used in:** any workflow where the webhook body might arrive as a string
+instead of a parsed object (common with some third-party integrations).
+**What it does:** Checks if the body is a string and parses it if needed,
+then extracts the phone field safely.
+
+**Key patterns learned:**
+- `typeof x === 'string'` — checks the data type of a value
+- `JSON.parse()` — converts a JSON string into a JavaScript object
+- Ternary `condition ? x : y` — one-line if/else
+
+```javascript
+const raw = $input.first().json;
+const body = typeof raw.body === 'string' ? JSON.parse(raw.body) : raw.body ?? raw;
+const phone = body.phone || body.from || '';
+return [{ json: { phone } }];
+```
+
+**The line I'd change:** Line 3 — update field names to match whatever
+the incoming webhook actually sends.
