@@ -15,7 +15,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.facebook.com/v19.0/1165360713323545/messages",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "facebookGraphApi",
         "sendHeaders": true,
@@ -54,8 +54,8 @@
             {
               "id": "f523fb95-a666-493e-8459-364be5b088ae",
               "name": "adminPhone",
-              "value": 18292657792,
-              "type": "number"
+              "value": "={{ $env.ADMIN_PHONE }}",
+              "type": "string"
             },
             {
               "id": "a79fb97e-4689-4978-9abf-08441c5a1c52",
