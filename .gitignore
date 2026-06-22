@@ -1,0 +1,15 @@
+# Secrets - NEVER commit these
+.env
+*.env
+.env.*
+
+# Docker volumes / data
+pg-data/
+n8n-data/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
